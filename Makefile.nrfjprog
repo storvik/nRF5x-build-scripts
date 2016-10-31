@@ -1,0 +1,197 @@
+##
+# nRF5x flash makefile
+##
+
+SOFTDEVICES = $(SDK_PATH)/components/softdevice
+ifneq ($(SOFTDEVICE),blank)
+    #SOFTDEVICE_HEX ?= $(SOFTDEVICES)/$(SOFTDEVICE)_$(NRF_MODEL)_$(SOFTDEVICE_VERSION)/$(SOFTDEVICE)_$(NRF_MODEL)_$(SOFTDEVICE_VERSION)_softdevice.hex
+    SOFTDEVICE_HEX ?= $(SOFTDEVICES)/$(SOFTDEVICE)/hex/$(SOFTDEVICE)_$(NRF_MODEL)_$(SOFTDEVICE_VERSION)_softdevice.hex
+endif
+
+beginflash:
+	@echo "--> Flashing..."
+
+flash-precheck:
+	@echo "--> Running pre-check."
+	@cmd=$$($(NRFJPROG) --ids 2>&1 >/dev/stdout) ; \
+	if [[ -z $$cmd ]] ; then \
+		echo "    No device connected to computer, cant flash!" ; \
+		exit 1 ; \
+	else \
+		lines=$$(echo -n "$$cmd" | wc -l) ; \
+		printf "    %d device(s) connected.\n" "$$lines" ; \
+		if [[ "$$lines" -gt "1" ]] ; then \
+			if [[ -z "$(FLASH_SNR)" ]] ; then \
+				echo "    No device specified. FLASH_SNR must be set to match serial number from make list-devices." ; \
+				exit 1 ; \
+			else \
+				echo "    Using device: $(FLASH_SNR)" ; \
+				if [[ $$cmd == *"$(FLASH_SNR)"* ]] ; then \
+					echo "    Device is connected." ; \
+				else \
+					echo "    Device is not connected to computer. FLASH_SNR must be set to match serial number from make list-devices, " ; \
+					exit 1 ; \
+				fi ; \
+			fi ; \
+		fi ; \
+	fi
+
+
+list-devices: ## List devices connected to computer
+	@echo "--> Listing devices connected to computer."
+	@cmd=$$($(NRFJPROG) --ids) ; \
+	if [[ -z $$cmd ]] ; then \
+		echo "    No device connected to computer."; \
+	else \
+		while read -r line; do \
+			echo "    $$line"; \
+		done <<< "$$cmd"; \
+	fi
+
+verify-softdevice: flash-precheck ## Verify flashed softdevice by comparing it to the softdevice set in the makefile (or provided by SOFTDEVICE_HEX parameter)
+ifndef SOFTDEVICE_HEX
+	$(error "You need to set the SOFTDEVICE_HEX command-line parameter to the softdevice hex-file path")
+endif
+	@echo "--> Verifying softdevice."
+	@echo "    SD: $(SOFTDEVICE_HEX)" ; \
+	if [[ -z "$(FLASH_SNR)" ]] ; then \
+		cmd=$$($(NRFJPROG) --family $(DEVICE) --verify $(SOFTDEVICE_HEX) 2>&1 >/dev/stdout) ; \
+	else \
+		cmd=$$($(NRFJPROG) --family $(DEVICE) --verify $(SOFTDEVICE_HEX) --snr $(FLASH_SNR) 2>&1 >/dev/stdout) ; \
+	fi ; \
+	if [[ $$cmd != *OK* ]] ; then \
+		echo "    Softdevice not on chip." ; \
+	else \
+		echo "    Softdevice already on chip." ; \
+	fi
+
+PROGRAM_HEX ?= $(HEX)
+verify-program: flash-precheck ## Verify flashed program by comparing it to the program
+ifndef PROGRAM_HEX
+	$(error "You need to set the PROGRAM_HEX command-line parameter to the program hex-file path")
+endif
+	@echo "--> Verifying program."
+	@echo "    PROGRAM: $(PROGRAM_HEX)" ; \
+	if [[ -z "$(FLASH_SNR)" ]] ; then \
+		cmd=$$($(NRFJPROG) --family $(DEVICE) --verify $(PROGRAM_HEX) 2>&1 >/dev/stdout) ; \
+	else \
+		cmd=$$($(NRFJPROG) --family $(DEVICE) --verify $(PROGRAM_HEX) --snr $(FLASH_SNR) 2>&1 >/dev/stdout) ; \
+	fi ; \
+	if [[ $$cmd != *OK* ]] ; then \
+		echo "    Program not on chip." ; \
+	else \
+		echo "    Program already on chip." ; \
+	fi
+
+verify: verify-softdevice verify-program reset ## Verifies softdevice and program on chip, i.e. verify-softdevice and verify-program
+
+ifneq ($(SOFTDEVICE),blank)
+    flash: all beginflash flash-softdevice flash-program reset ## Build if neccessary and flash program to connected nRF5x chip
+else
+    flash: all beginflash flash-program reset
+endif
+
+flash-softdevice: flash-precheck ## Flash softdevice to chip, softdevice is taken from makefile or SOFTDEVICE_HEX
+ifndef SOFTDEVICE_HEX
+	$(error "You need to set the SOFTDEVICE_HEX command-line parameter to the softdevice hex-file path")
+endif
+	@echo "--> Flashing softdevice." ; \
+	if [[ -z "$(FLASH_SNR)" ]] ; then \
+		cmd=$$($(NRFJPROG) --family $(DEVICE) --verify $(SOFTDEVICE_HEX) 2>&1 >/dev/stdout) ; \
+	else \
+		cmd=$$($(NRFJPROG) --family $(DEVICE) --verify $(SOFTDEVICE_HEX) --snr $(FLASH_SNR) 2>&1 >/dev/stdout) ; \
+	fi ; \
+	if [[ $$cmd != *OK* ]] ; then \
+		echo "    Softdevice not on chip." ; \
+		if [[ -z "$(FLASH_SNR)" ]] ; then \
+			cmd=$$($(NRFJPROG) --family $(DEVICE) --program $(SOFTDEVICE_HEX) --sectorerase) ; \
+		else \
+			cmd=$$($(NRFJPROG) --family $(DEVICE) --program $(SOFTDEVICE_HEX) --snr $(FLASH_SNR) --sectorerase) ; \
+		fi ; \
+		if [[ -z $$cmd ]] ; then \
+			echo "    No device connected to computer."; \
+		else \
+			while read -r line; do \
+				if [[ $$line != Erasing* ]] ; then \
+					echo "    $$line"; \
+				fi \
+			done <<< "$$cmd"; \
+		fi \
+	else \
+		echo "    Softdevice already on chip."; \
+	fi
+
+flash-program: flash-precheck ## Flash program to chip, program is taken from makefile of PROGRAM_HEX. Note, does not build
+ifndef PROGRAM_HEX
+	$(error "You need to set the PROGRAM_HEX command-line parameter to the program hex-file path")
+endif
+	@echo "--> Flashing program." ; \
+	if [[ -z "$(FLASH_SNR)" ]] ; then \
+		cmd=$$($(NRFJPROG) --family $(DEVICE) --verify $(PROGRAM_HEX) 2>&1 >/dev/stdout) ; \
+	else \
+		cmd=$$($(NRFJPROG) --family $(DEVICE) --verify $(PROGRAM_HEX) --snr $(FLASH_SNR) 2>&1 >/dev/stdout) ; \
+	fi ; \
+	if [[ $$cmd != *OK* ]] ; then \
+		echo "    Program not on chip." ; \
+		if [[ -z "$(FLASH_SNR)" ]] ; then \
+			cmd=$$($(NRFJPROG) --family $(DEVICE) --program $(PROGRAM_HEX) --sectorerase) ; \
+		else \
+			cmd=$$($(NRFJPROG) --family $(DEVICE) --program $(PROGRAM_HEX) --snr $(FLASH_SNR) --sectorerase) ; \
+		fi ; \
+		if [[ -z $$cmd ]] ; then \
+			echo "    No device connected to computer."; \
+		else \
+			while read -r line; do \
+				if [[ $$line != Erasing* ]] ; then \
+					echo "    $$line"; \
+				fi \
+			done <<< "$$cmd"; \
+		fi \
+	else \
+		echo "    Program already on chip."; \
+	fi
+
+reset: flash-precheck ## Reset device
+	@echo "--> Reseting device.." ; \
+	if [[ -z "$(FLASH_SNR)" ]] ; then \
+		cmd=$$($(NRFJPROG) --family $(DEVICE) --reset) ; \
+	else \
+		cmd=$$($(NRFJPROG) --family $(DEVICE) --snr $(FLASH_SNR) --reset) ; \
+	fi ; \
+	if [[ -z $$cmd ]] ; then \
+		echo "    No device connected to computer."; \
+	else \
+		while read -r line; do \
+			echo "    $$line"; \
+		done <<< "$$cmd"; \
+	fi
+
+pinreset: flash-precheck ## Perform a pin reset on device
+	@echo "--> Pinreset on device.." ; \
+	if [[ $$cmd != *OK* ]] ; then \
+		cmd=$$($(NRFJPROG) --family $(DEVICE) --pinreset) ; \
+	else \
+		cmd=$$($(NRFJPROG) --family $(DEVICE) --snr $(FLASH_SNR) --pinreset) ; \
+	fi ; \
+	if [[ -z $$cmd ]] ; then \
+		echo "    No device connected to computer."; \
+	else \
+		while read -r line; do \
+			echo "    $$line"; \
+		done <<< "$$cmd"; \
+	fi
+
+erase-all: flash-precheck ## Complete erase of entire chip (softdevice and program)
+	@echo "--> Erasing chip data.." ; \
+	if [[ $$cmd != *OK* ]] ; then \
+		cmd=$$($(NRFJPROG) --family $(DEVICE) --eraseall) ; \
+	else \
+		cmd=$$($(NRFJPROG) --family $(DEVICE) --snr $(FLASH_SNR) --eraseall) ; \
+	fi ; \
+	if [[ -z $$cmd ]] ; then \
+		echo "    No device connected to computer."; \
+	else \
+		while read -r line; do \
+			echo "    $$line"; \
+		done <<< "$$cmd"; \
+	fi

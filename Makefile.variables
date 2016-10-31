@@ -1,0 +1,28 @@
+##
+# Global variables
+##
+
+# Path to GCC toolchain.
+TOOLCHAIN_PATH = /Users/storvik/developer/nrf5x/gcc-arm-none-eabi-4_9-2015q3
+
+# Path to folder containing SDK versions.
+# SDK folders must have the same name as SDK verison, f.ex. SDK_VERSION_PATH/11.0.0
+SDK_VERSIONS_PATH ?= /Users/storvik/developer/nrf5x/sdk
+
+# Default SDK version
+SDK_VERSION ?= 12.1.0
+
+# nRFjprog location
+# The nrfjprog is a part of the command line tools for Linux and OS X
+NRFJPROG = /Users/storvik/developer/nrf5x/nRF5x-command-line-tools/nrfjprog/nrfjprog
+
+# Default board
+# If no Nordic BOARD is defined in project specific makefile,
+# a custom_board.h must be present in include path.
+BOARD ?= BOARD_CUSTOM
+
+# Command for creating documentation
+DOCS_CMD = doxygen
+
+# Build folder config.
+OUTPUT_PATH = build/

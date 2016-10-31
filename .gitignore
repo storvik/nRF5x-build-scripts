@@ -1,0 +1,6 @@
+# Ignore Mac specific files
+.DS_STORE
+*.DS_STORE
+
+# Ignore flymd specific files
+flymd.*

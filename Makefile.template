@@ -1,0 +1,65 @@
+##
+# Project specific Makefile
+##
+
+PROJECT_NAME = $(shell basename "$(realpath ./)")
+
+APPLICATION_SRCS = $(notdir $(wildcard ./src/*.c))
+
+# Source files from the SDK used in the project
+APPLICATION_SRCS += app_error.
+
+# Project specific soure and header files
+LIBRARY_PATHS += include
+SOURCE_PATHS += src
+
+BUILD_SCRIPT_PATH = ../../nrf5x-build-scripts            # Path to nrf5x-build-scripts
+
+NRF_IC         = nrf51422                                # [ nrf51422 / nrf51822 / nrf52832 ]
+NRF_IC_VARIANT = ac                                      # [ aa / ab / ac ]
+
+
+##
+# Optional variables that can be specified
+##
+
+# Softdevice used.
+# Default value: Not defined. I.e. no softdevice will be used.
+# Values: [ s130 / s132 ]
+# SOFTDEVICE = s130
+
+# Custom linker script
+# Default value: Linker script included in SDK.
+# Note: This is often required!
+#LINKER_SCRIPT = project_name_gcc_NRF_MODEL.ld
+
+# NRF model
+# Default value: Determined by softdevice. If no softdevice is set this value must be specified.
+# Values: [ nrf51 / nrf52]
+# NRF_MODEL = nrf51
+
+# Board used, f.ex. development kit.
+# Default value: The value specified in Makefile.variables
+# BOARD = BOARD_PCA10040
+
+# SDK version used in project.
+# Default value: The value specified in Makefile.variables
+# Values: [ 11.0.0 / 12.1.0 ]
+# SDK_VERSION = 12.1.0
+
+# Softdevice version
+# Default value: Softdevice version included in SDK.
+#                Determined by build system.
+# SOFTDEVICE_VERSION = 2.0.0
+
+# Softdevice HEX path
+# If specific softdevice hex should be used.
+# Normally not neccessary, as the makefile uses the correct one.
+# SOFTDEVICE_HEX = path/to/softdevice/hex.hex
+
+# Use reset GPIO as reset button
+# Uncomment to enable reset GPIO as reset pin.
+#CFLAGS += -DCONFIG_GPIO_AS_PINRESET
+
+# Include other Makefiles to actually build the target
+include $(BUILD_SCRIPT_PATH)/Makefile

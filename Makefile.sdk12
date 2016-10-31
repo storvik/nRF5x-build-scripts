@@ -1,0 +1,83 @@
+# Paths to SDK-related stuff
+SDK_INCLUDE_PATH += $(SDK_PATH)components/
+SDK_SOURCE_PATH += $(SDK_PATH)components/
+CMSIS_INCLUDE_PATH += $(SDK_PATH)components/toolchain/cmsis/include/
+
+# Check for softdevice, different SDKs supports different softdevices
+ifeq ($(SOFTDEVICE), s130)
+    USE_BLE = 1
+    SOFTDEVICE_VERSION ?= 2.0.1
+    CFLAGS += -DNRF_SD_BLE_API_VERSION=2
+    NRF_MODEL ?= nrf51
+endif
+ifeq ($(SOFTDEVICE), s132)
+    USE_BLE = 1
+    SOFTDEVICE_VERSION ?= 3.0.0
+    CFLAGS += -DNRF_SD_BLE_API_VERSION=3
+    NRF_MODEL ?= nrf52
+    NRF_IC = nrf52832
+endif
+
+ifneq ($(SOFTDEVICE), blank)
+	LIBRARY_PATHS += $(SDK_PATH)components/softdevice/$(SOFTDEVICE)/headers/
+	LIBRARY_PATHS += $(SDK_PATH)components/softdevice/$(SOFTDEVICE)/headers/*/
+    LIBRARY_PATHS += $(SDK_INCLUDE_PATH)softdevice/common/softdevice_handler/
+
+    SOURCE_PATHS += $(SDK_INCLUDE_PATH)softdevice/common/softdevice_handler/
+else
+    LIBRARY_PATHS += $(wildcard $(SDK_INCLUDE_PATH)drivers_nrf/nrf_soc_nosd/)
+endif
+
+LIBRARY_PATHS += $(wildcard $(SDK_INCLUDE_PATH)drivers_nrf/adc/)
+LIBRARY_PATHS += $(wildcard $(SDK_INCLUDE_PATH)drivers_nrf/ble_flash/)
+LIBRARY_PATHS += $(wildcard $(SDK_INCLUDE_PATH)drivers_nrf/clock/)
+LIBRARY_PATHS += $(wildcard $(SDK_INCLUDE_PATH)drivers_nrf/common/)
+LIBRARY_PATHS += $(wildcard $(SDK_INCLUDE_PATH)drivers_nrf/config/)
+LIBRARY_PATHS += $(wildcard $(SDK_INCLUDE_PATH)drivers_nrf/delay/)
+LIBRARY_PATHS += $(wildcard $(SDK_INCLUDE_PATH)drivers_nrf/fifo/)
+LIBRARY_PATHS += $(wildcard $(SDK_INCLUDE_PATH)drivers_nrf/gpiote/)
+LIBRARY_PATHS += $(wildcard $(SDK_INCLUDE_PATH)drivers_nrf/hal/)
+LIBRARY_PATHS += $(wildcard $(SDK_INCLUDE_PATH)drivers_nrf/lpcomp/)
+LIBRARY_PATHS += $(wildcard $(SDK_INCLUDE_PATH)drivers_nrf/ppi/)
+LIBRARY_PATHS += $(wildcard $(SDK_INCLUDE_PATH)drivers_nrf/pstorage/)
+LIBRARY_PATHS += $(wildcard $(SDK_INCLUDE_PATH)drivers_nrf/qdec/)
+LIBRARY_PATHS += $(wildcard $(SDK_INCLUDE_PATH)drivers_nrf/radio_config/)
+LIBRARY_PATHS += $(wildcard $(SDK_INCLUDE_PATH)drivers_nrf/rng/)
+LIBRARY_PATHS += $(wildcard $(SDK_INCLUDE_PATH)drivers_nrf/rtc/)
+LIBRARY_PATHS += $(wildcard $(SDK_INCLUDE_PATH)drivers_nrf/sdio/)
+LIBRARY_PATHS += $(wildcard $(SDK_INCLUDE_PATH)drivers_nrf/spi_master/)
+LIBRARY_PATHS += $(wildcard $(SDK_INCLUDE_PATH)drivers_nrf/spi_slave/)
+LIBRARY_PATHS += $(wildcard $(SDK_INCLUDE_PATH)drivers_nrf/swi/)
+LIBRARY_PATHS += $(wildcard $(SDK_INCLUDE_PATH)drivers_nrf/timer/)
+LIBRARY_PATHS += $(wildcard $(SDK_INCLUDE_PATH)drivers_nrf/twi_master/)
+LIBRARY_PATHS += $(wildcard $(SDK_INCLUDE_PATH)drivers_nrf/uart/)
+LIBRARY_PATHS += $(wildcard $(SDK_INCLUDE_PATH)drivers_nrf/wdt/)
+LIBRARY_PATHS += $(wildcard $(SDK_INCLUDE_PATH)drivers_ext/*/)
+LIBRARY_PATHS += $(wildcard $(SDK_INCLUDE_PATH)device/)
+LIBRARY_PATHS += $(wildcard $(SDK_INCLUDE_PATH)libraries/*/)
+LIBRARY_PATHS += $(wildcard $(SDK_INCLUDE_PATH)libraries/log/src/)
+LIBRARY_PATHS += $(dir $(wildcard $(SDK_INCLUDE_PATH)*/))
+LIBRARY_PATHS += $(dir $(wildcard $(SDK_INCLUDE_PATH)libraries/*/*/))
+LIBRARY_PATHS += $(SDK_INCLUDE_PATH)toolchain/gcc/
+LIBRARY_PATHS += $(SDK_INCLUDE_PATH)toolchain/
+LIBRARY_PATHS += $(SDK_PATH)examples/bsp/
+LIBRARY_PATHS += $(dir $(wildcard $(SDK_PATH)external/*/))
+LIBRARY_PATHS += $(SDK_INCLUDE_PATH)
+
+SOURCE_PATHS += $(SDK_SOURCE_PATH)
+SOURCE_PATHS += $(wildcard $(SDK_SOURCE_PATH)*/)
+SOURCE_PATHS += $(wildcard $(SDK_SOURCE_PATH)libraries/*/)
+SOURCE_PATHS += $(wildcard $(SDK_SOURCE_PATH)drivers_nrf/*/)
+SOURCE_PATHS += $(wildcard $(SDK_SOURCE_PATH)drivers_ext/*/)
+SOURCE_PATHS += $(SDK_PATH)examples/bsp/
+SOURCE_PATHS += $(SDK_SOURCE_PATH)toolchain/
+SOURCE_PATHS += $(SDK_SOURCE_PATH)toolchain/gcc/
+SOURCE_PATHS += $(dir $(wildcard $(SDK_PATH)external/*/))
+
+ifdef USE_BLE
+    LIBRARY_PATHS += $(wildcard $(SDK_INCLUDE_PATH)ble/*/)
+    LIBRARY_PATHS += $(wildcard $(SDK_INCLUDE_PATH)ble/ble_services/*/)
+
+    SOURCE_PATHS += $(wildcard $(SDK_SOURCE_PATH)ble/*/)
+    SOURCE_PATHS += $(wildcard $(SDK_SOURCE_PATH)ble/ble_services/*/)
+endif
