@@ -42,6 +42,8 @@ else
 NO_ECHO := @
 endif
 
+SDK_PATH = $(SDK_VERSIONS_PATH)/$(SDK_VERSION)/
+
 ifndef SOFTDEVICE
     SOFTDEVICE = blank
     LINKER_SCRIPT ?= $(SDK_PATH)components/toolchain/gcc/$(NRF_MODEL)_xx$(NRF_IC_VARIANT).ld
@@ -50,11 +52,18 @@ else
     CFLAGS += -DSOFTDEVICE_$(SOFTDEVICE)
 endif
 
-SDK_PATH = $(SDK_VERSIONS_PATH)/$(SDK_VERSION)/
 LINKER_COMMON_PATH = $(SDK_PATH)components/toolchain/gcc
 LINKER_SCRIPT ?= $(SDK_PATH)components/softdevice/$(SOFTDEVICE)/toolchain/armgcc/armgcc_$(SOFTDEVICE)_$(NRF_IC)_xx$(NRF_IC_VARIANT).ld
 
 # Check SDK version and include correct file
+ifeq ($(SDK_VERSION), 14.2.0)
+    CFLAGS += -DSDK_VERSION_14
+    include $(BUILD_SCRIPT_PATH)/Makefile.sdk14
+else
+ifeq ($(SDK_VERSION), 13.0.0)
+    CFLAGS += -DSDK_VERSION_13
+    include $(BUILD_SCRIPT_PATH)/Makefile.sdk13
+else
 ifeq ($(SDK_VERSION), 12.1.0)
     CFLAGS += -DSDK_VERSION_12
     include $(BUILD_SCRIPT_PATH)/Makefile.sdk12
@@ -63,6 +72,8 @@ ifeq ($(SDK_VERSION), 11.0.0)
     CFLAGS += -DSDK_VERSION_11
     include $(BUILD_SCRIPT_PATH)/Makefile.sdk11
 else
+endif
+endif
 endif
 endif
 
@@ -91,6 +102,22 @@ ifeq ($(DEVICE), NRF52)
     CPUFLAGS += -mthumb -mcpu=cortex-m4
     CPUFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16
 
+ifeq ($(SDK_VERSION), 14.2.0)
+	CFLAGS += -DNRF52_PAN_74
+else
+ifeq ($(SDK_VERSION), 13.0.0)
+    CFLAGS += -DNRF52_PAN_12
+    CFLAGS += -DNRF52_PAN_15
+    CFLAGS += -DNRF52_PAN_20
+    CFLAGS += -DNRF52_PAN_31
+    CFLAGS += -DNRF52_PAN_36
+    CFLAGS += -DNRF52_PAN_51
+    CFLAGS += -DNRF52_PAN_54
+    CFLAGS += -DNRF52_PAN_55
+    CFLAGS += -DNRF52_PAN_58
+    CFLAGS += -DNRF52_PAN_64
+    CFLAGS += -DNRF52_PAN_74
+else
     CFLAGS += -DNRF52_PAN_12
     CFLAGS += -DNRF52_PAN_15
     CFLAGS += -DNRF52_PAN_20
@@ -105,6 +132,8 @@ ifeq ($(DEVICE), NRF52)
     CFLAGS += -DNRF52_PAN_62
     CFLAGS += -DNRF52_PAN_63
     CFLAGS += -DNRF52_PAN_64
+endif
+endif
 endif
 endif
 

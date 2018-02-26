@@ -1,7 +1,7 @@
 # nRF5x-build-scripts
 
 Makefiles used to compile nRF5x projects on Mac OS X (May work in Linux too).
-Supports SDK 11.0.0 and 12.0.0/12.1.0 with softdevices included in the SDK.
+Supports SDK 11.0.0, 12.0.0/12.1.0, 13.0.0, and 14.2.0 with softdevices included in the SDK.
 
 ## Setup
 
@@ -30,6 +30,10 @@ SDK dir
   ├── 11.0.0
   |     └── SDK content
   └── 12.1.0
+  |    └── SDK content
+  └── 13.0.0
+        └── SDK content
+  └── 14.2.0
         └── SDK content
 ```
 
@@ -54,5 +58,7 @@ Currently supported SDKs and softdevices:
 
 | SDK Version     | IC                 | Softdevices |
 | --------------- | ------------------ | ----------- |
+| 14.2.0          | nRF51x22, nRF52832 | S112        |
+| 13.0.0          | nRF51x22, nRF52832 | S130, S132  |
 | 12.1.0 / 12.0.0 | nRF51x22, nRF52832 | S130, S132  |
 | 11.0.0          | nRF51x22, nRF52832 | S130, S132  |
